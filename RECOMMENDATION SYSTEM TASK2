@@ -1,0 +1,54 @@
+# Sample user-item matrix (user_id, movie_id, rating)
+ratings = [
+    (1, 'MovieA', 5),
+    (1, 'MovieB', 4),
+    (2, 'MovieA', 3),
+    (2, 'MovieC', 5),
+    (3, 'MovieB', 2),
+    (3, 'MovieC', 4),
+]
+
+# Create a dictionary to store user preferences
+user_preferences = {}
+
+# Populate user preferences from ratings
+for user, movie, rating in ratings:
+    if user not in user_preferences:
+        user_preferences[user] = {}
+    user_preferences[user][movie] = rating
+
+# Function to calculate similarity between two users using Euclidean distance
+def euclidean_distance(user1, user2):
+    common_movies = set(user1.keys()) & set(user2.keys())
+    if not common_movies:
+        return 0  # no common movies, similarity is 0
+
+    squared_diff = sum((user1[movie] - user2[movie]) ** 2 for movie in common_movies)
+    return 1 / (1 + squared_diff)  # return similarity, higher is better
+
+# Function to recommend movies to a user
+def recommend_movies(user_id, user_preferences):
+    user = user_preferences[user_id]
+    similarity_scores = {}
+
+    # Calculate similarity scores between the given user and other users
+    for other_user, preferences in user_preferences.items():
+        if other_user != user_id:
+            similarity_scores[other_user] = euclidean_distance(user, preferences)
+
+    # Sort users by similarity score in descending order
+    sorted_users = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)
+
+    # Recommend movies from users with high similarity
+    recommendations = []
+    for other_user, similarity in sorted_users:
+        for movie in user_preferences[other_user]:
+            if movie not in user and movie not in recommendations:
+                recommendations.append(movie)
+                if len(recommendations) == 5:  # limit to 5 recommendations
+                    return recommendations
+
+# Example usage
+user_id_to_recommend = 1
+recommendations = recommend_movies(user_id_to_recommend, user_preferences)
+print(f"Recommended movies for user {user_id_to_recommend}: {recommendations}")
